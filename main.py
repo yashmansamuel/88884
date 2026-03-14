@@ -1,5 +1,6 @@
 import os
 import logging
+import secrets
 from fastapi import FastAPI, Request, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
@@ -14,18 +15,18 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 # -----------------------------
-# CORS Middleware (Frontend localhost)
+# CORS Middleware (allow frontend)
 # -----------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ya ["http://127.0.0.1:3000"] for strict
+    allow_origins=["*"],  # For development; restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # -----------------------------
-# Config
+# Config from environment
 # -----------------------------
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://ujclhweqqifgoiscvqmd.supabase.co")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_soPYxakWGl9MTrzCjdjt2w_fR1jsVVf")
@@ -73,9 +74,7 @@ def get_balance(api_key: str):
 # -----------------------------
 @app.post("/v1/user/new-key")
 def generate_key():
-    import secrets
     new_key = "sig-live-" + secrets.token_urlsafe(16)
-    # Insert into Supabase with default balance
     try:
         supabase.table("users").insert({"api_key": new_key, "token_balance": 1000}).execute()
         return {"api_key": new_key, "balance": 1000}
@@ -106,7 +105,6 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
     if current_balance <= 0:
         raise HTTPException(status_code=402, detail="Insufficient Balance")
 
-    # Parse request JSON
     body = await request.json()
 
     try:
@@ -121,7 +119,6 @@ async def chat_proxy(request: Request, authorization: str = Header(None)):
         tokens_used = ai_response.usage.total_tokens
         new_balance = current_balance - tokens_used
 
-        # Update balance
         supabase.table("users").update({"token_balance": new_balance}).eq("api_key", user_api_key).execute()
 
         ai_response.model = "Neo-L1.0"
