@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 # -----------------------------
-# CORS Middleware (allow frontend)
+# CORS Middleware
 # -----------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For development; restrict in production
+    allow_origins=["*"],  # restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,9 +28,9 @@ app.add_middleware(
 # -----------------------------
 # Config from environment
 # -----------------------------
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://ujclhweqqifgoiscvqmd.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_soPYxakWGl9MTrzCjdjt2w_fR1jsVVf")
-CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY", "csk-r6x94tyk4xk9ky853jw33459t84ddtxx8ked68829dd2d24f")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
 
 # -----------------------------
 # Clients Init
