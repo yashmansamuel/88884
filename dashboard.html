@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEO L1.0 · Signaturesi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #111111;
+        }
+        .card {
+            background-color: #f9f9f9;
+            border: 1px solid #e5e5e5;
+            border-radius: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+        input, button {
+            transition: all 0.2s ease;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-5xl font-bold tracking-tight">NEO <span class="font-light">L1.0</span></h1>
+            <p class="text-sm text-gray-500 uppercase tracking-[0.3em] mt-2">Signaturesi</p>
+        </div>
+
+        <!-- Login Section -->
+        <div id="login-section" class="card p-8">
+            <h2 class="text-2xl font-semibold mb-6">Authentication</h2>
+            <input type="text" id="userKey" placeholder="sig-live-xxxxxxxx" 
+                   class="w-full p-4 border border-gray-300 rounded-xl mb-4 bg-white text-gray-900 font-mono text-sm">
+            <button onclick="authSystem()" id="loginBtn" 
+                    class="w-full bg-black text-white py-4 rounded-xl font-medium hover:bg-gray-900 mb-3">
+                Connect
+            </button>
+            <button onclick="createApiKey()" 
+                    class="w-full bg-white text-black border border-gray-300 py-4 rounded-xl font-medium hover:bg-gray-100">
+                Generate new API key
+            </button>
+            <p class="text-xs text-gray-400 text-center mt-6">Authorised access only</p>
+        </div>
+
+        <!-- Dashboard Section (hidden initially) -->
+        <div id="dash-section" class="hidden card p-8 text-center">
+            <h2 class="text-2xl font-semibold mb-2">Token balance</h2>
+            <div class="text-6xl font-bold my-6" id="tokenText">0</div>
+            <p class="text-sm text-gray-500">Your current API key balance</p>
+        </div>
+    </div>
+
+    <script>
+        async function authSystem() {
+            const key = document.getElementById('userKey').value.trim();
+            if (!key) { alert("Please enter an API key"); return; }
+            const tokenText = document.getElementById('tokenText');
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.textContent = "Connecting...";
+
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/v1/user/balance?api_key=${key}`);
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('login-section').classList.add('hidden');
+                    document.getElementById('dash-section').classList.remove('hidden');
+                    tokenText.textContent = data.balance;
+                } else {
+                    alert(data.detail || "Invalid API key");
+                }
+            } catch (err) {
+                alert("Cannot reach backend. Make sure the server is running at http://127.0.0.1:8000");
+                console.error(err);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = "Connect";
+            }
+        }
+
+        async function createApiKey() {
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/v1/user/new-key`, { method: "POST" });
+                const data = await res.json();
+                alert(`New API key: ${data.api_key}\nInitial balance: ${data.balance}`);
+                document.getElementById('userKey').value = data.api_key;
+            } catch (err) {
+                alert("Failed to create API key");
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
